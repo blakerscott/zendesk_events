@@ -1,0 +1,3 @@
+name = Zendesk Events
+description = A module that makes API calls to Zendesk.
+core = 7.x
