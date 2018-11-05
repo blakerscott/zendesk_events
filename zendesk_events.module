@@ -11,14 +11,20 @@ $token     = "xlHUq4xOk4KI8IjBUWHw0CIwq7MeXPx3KFCACw8m"; // replace this with yo
 $client = new ZendeskAPI($subdomain);
 $client->setAuth('basic', ['username' => $username, 'token' => $token]);
 
+$fake_calendar_org_ids = array(14114387868, 27811797827);
 
-// Return all tickets from our custom view,
+// Return all tickets from our custom view.
 $tickets = $client->views(360049656394)->tickets();
-//Grab the org ids from each ticket, and assign the new array to the var $ticket_orgs
+//Grab the org ids from each ticket, and put them in an array.
 $ticket_orgs = array_column($tickets->tickets, 'organization_id');
+//find org id matches, if any
+$matching_org_ids = array_intersect($ticket_orgs, $fake_calendar_org_ids);
 
-//print ticket org ids
+//print ticket org id array, then print org ids that match the fake calendar org ids
 print_r($ticket_orgs);
+print_r(' . . . . .');
+print_r($matching_org_ids);
+
 
 
 
