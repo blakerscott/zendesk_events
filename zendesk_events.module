@@ -11,27 +11,37 @@ $token     = "xlHUq4xOk4KI8IjBUWHw0CIwq7MeXPx3KFCACw8m"; // replace this with yo
 $client = new ZendeskAPI($subdomain);
 $client->setAuth('basic', ['username' => $username, 'token' => $token]);
 
+
+//This code needs to be written:
+
+//$seed_tickets = some code that grabs current calendar_event ticket numbers from the database.
+//then
+//$seed_tickets_data = $client->tickets($seed_tickets);
+//$seed_tickets_orgs = array_column($seed_tickets_data->tickets, 'organization_id');
+
+//Some org ids used to show prood of concept for matching org ids between arrays.  This will be removed when the above code is written.
 $fake_calendar_org_ids = array(14114387868, 27811797827);
+
 
 // Return all tickets from our custom view.
 $tickets = $client->views(360049656394)->tickets();
 //Grab the org ids from each ticket, and put them in an array.
 $ticket_orgs = array_column($tickets->tickets, 'organization_id');
-//find org id matches, if any
+//Find org id matches, if any.
 $matching_org_ids = array_intersect($ticket_orgs, $fake_calendar_org_ids);
 
-//print ticket org id array, then print org ids that match the fake calendar org ids
+//Print ticket org id array, then print org ids that match the fake calendar org ids:
 print_r($ticket_orgs);
 print_r(' . . . . .');
 print_r($matching_org_ids);
 
 
+//if else statement to determine whether to add internal comments, or to just expire what's currently in the view:
 
-
-/* add a comment (this doesn't work yet)
-
-$add_comment = $client->views(360049656394)->tickets()->create([
-    'comment' => [
-        'body' => 'Blake added a comment',
-    ]
-]); */
+if (empty($matching_org_ids) == false)
+    print_r("There's a match!");
+    //add comment
+    //add tags to all tickets
+else
+    print_r("There's not a match right now.");
+    //add tags to all tickets
