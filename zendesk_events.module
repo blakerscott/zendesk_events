@@ -1,2 +1,31 @@
 <?php
 
+require_once DRUPAL_ROOT . '/sites/all/modules/custom/zendesk_events/zendesk_api_client/vendor/autoload.php';
+
+use Zendesk\API\HttpClient as ZendeskAPI;
+
+$subdomain = "acquia1457030485";
+$username  = "blake.scott@acquia.com"; // replace this with your registered email
+$token     = "xlHUq4xOk4KI8IjBUWHw0CIwq7MeXPx3KFCACw8m"; // replace this with your token
+
+$client = new ZendeskAPI($subdomain);
+$client->setAuth('basic', ['username' => $username, 'token' => $token]);
+
+
+// Return all tickets from our custom view,
+$tickets = $client->views(360049656394)->tickets();
+//Grab the org ids from each ticket, and assign the new array to the var $ticket_orgs
+$ticket_orgs = array_column($tickets->tickets, 'organization_id');
+
+//print ticket org ids
+print_r($ticket_orgs);
+
+
+
+/* add a comment (this doesn't work yet)
+
+$add_comment = $client->views(360049656394)->tickets()->create([
+    'comment' => [
+        'body' => 'Blake added a comment',
+    ]
+]); */
