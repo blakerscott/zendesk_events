@@ -14,10 +14,12 @@ $client->setAuth('basic', ['username' => $username, 'token' => $token]);
 
 //This code needs to be written:
 
-//$seed_tickets = some code that grabs current calendar_event ticket numbers from the database.
-//then
+# some code that grabs current calendar_event ticket numbers from the database.
+$data = cache_get('cached_gcal_data');
+$seed_tickets = array_values($data->data);
+print_r($seed_tickets);
 //$seed_tickets_data = $client->tickets($seed_tickets);
-//$seed_tickets_orgs = array_column($seed_tickets_data->tickets, 'organization_id');
+//$seed_tickets_orgs = array_column($seed_tickets->data, 'organization_id');
 
 //Some org ids used to show prood of concept for matching org ids between arrays.  This will be removed when the above code is written.
 $fake_calendar_org_ids = array(14114387868, 27811797827);
@@ -36,6 +38,8 @@ print_r(' . . . . .');
 print_r($matching_org_ids);
 
 
+
+
 //if else statement to determine whether to add internal comments, or to just expire what's currently in the view:
 
 if (empty($matching_org_ids) == false)
@@ -45,3 +49,44 @@ if (empty($matching_org_ids) == false)
 else
     print_r("There's not a match right now.");
     //add tags to all tickets
+
+/*
+
+# from senecal
+function main_zendesk_checker() {
+    # …
+    # get google calendar events, cached or otherwise.
+    $gcal_data = get_data_from_gcal();
+    # …
+  }
+
+  function get_data_from_gcal() {
+
+    # how long, in seconds, should these cached objects last?
+    $cache_lifetime = 3600;
+
+    # establish the current time as a unix timestamp.
+    $current_time = time();
+
+    # first, try to get cached gcal data.
+    $cached_data = cache_get('cached_gcal_data');
+
+    # if no cached data exist, or if the cached data are past their expiry, get fresh data.
+    if ($cached_data === FALSE || $cached_data->expire < $current_time) {
+
+      # retrieve the data with a google calendar API call.
+      $fresh_data = gcal_api_call();
+
+      # store the freshly retrieved data in cache.
+      cache_set('cached_gcal_data', $fresh_data, 'cache', $current_time + $cache_lifetime);
+
+      # return the fresh data.
+      return $fresh_data;
+    }
+
+    # otherwise, return the cached data.
+    else {
+      return $cached_data->data;
+    }
+  }
+
