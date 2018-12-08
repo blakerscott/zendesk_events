@@ -15,69 +15,57 @@ function zendesk_client_init() {
     return $client;
 }
 //Instantiate the ZD client
-$client = zendesk_client_init();
+zendesk_client_init();
 
-
-//Grab the current calendar_events.module generated TICKET IDs from cache.
-// ****Add code that Aaron Senecal wrote to determine the freshness of the data.*****
-$data = cache_get('cached_gcal_data');
-$seed_tickets = array_values($data->data);
 
 
 //Take the TICKET IDs from Google Calendar and grab their ORG IDs from Zendesk.
-$orgs_from_gcal = array();
-foreach($seed_tickets as $ticket) {
-    $x = $client->tickets()->find($ticket);
-    $y = $x->ticket->organization_id;
-    $z = array_push($orgs_from_gcal, $y);
-}
-//print the result
-echo "<br>";
-print_r('These are the ORG IDs for the current events: ');
-var_dump($orgs_from_gcal);
-echo "<br>";
-
-
-// Return all tickets from our custom Zendesk view.
-$tickets_from_zd_view = $client->views(360049656394)->tickets();
-
-//Grab the TICKET IDs for each ticket, put them in an array, then print the result.
-$zd_ticket_ids = array_column($tickets_from_zd_view->tickets, 'id');
-echo "<br>";
-print_r("These are all the TICKET IDs from our Zendesk View:  ");
-print_r($zd_ticket_ids);
-
-//Grab the ORG IDs for each ticket, put them in an array, then print the result.
-$zd_ticket_orgs = array_column($tickets_from_zd_view->tickets, 'organization_id');
-echo "<br>";
-print_r("These are all the ORG IDs from our Zendesk View:  ");
-print_r($zd_ticket_orgs);
-echo "<br>";
-
-//Find ORG ID matches between Google Calendar and the Zendesk view.
-$matching_org_ids = array_intersect($zd_ticket_orgs, $orgs_from_gcal);
-
-
-//The function for adding the Tag to expire the tickets from our View.
-function addTag($zd_ticket_ids) {
+function orgs_from_gcal() {
     $client = zendesk_client_init();
-    //Try/Catch for testing
-    try {
-        $updatedTickets = $client->tickets()->updateMany(
-            [
-                'ids'    => $zd_ticket_ids,
-                'tags' => ['checked'],
-            ]
-        );
+    //Grab the current calendar_events.module generated TICKET IDs from cache.
+    // ****Add code that Aaron Senecal wrote to determine the freshness of the data.*****
+    $data = cache_get('cached_gcal_data');
+    $seed_tickets = array_values($data->data);
+    $orgs_from_gcal = array();
+    foreach($seed_tickets as $ticket) {
+      $x = $client->tickets()->find($ticket);
+      $y = $x->ticket->organization_id;
+      $z = array_push($orgs_from_gcal, $y);
     }
-    catch (\Zendesk\API\Exceptions\ApiResponseException $e) {
-        echo $e->getMessage().'</br>';
-    }
+    //print the result
+    echo "<br>";
+    print_r('These are the ORG IDs for the current events: ');
+    var_dump($orgs_from_gcal);
+    echo "<br>";
+    return $orgs_from_gcal;
 }
-
+orgs_from_gcal();
 
 
 //Determine whether to add internal comments, or to just expire what's currently in the view.
+function addComment() {
+    $client = zendesk_client_init();
+    $gcal_orgs = orgs_from_gcal();
+    // Return all tickets from our custom Zendesk view.
+    $tickets_from_zd_view = $client->views(360049656394)->tickets();
+
+    //Grab the TICKET IDs for each ticket, put them in an array, then print the result.
+    $zd_ticket_ids = array_column($tickets_from_zd_view->tickets, 'id');
+    echo "<br>";
+    print_r("These are all the TICKET IDs from our Zendesk View:  ");
+    print_r($zd_ticket_ids);
+
+    //Grab the ORG IDs for each ticket, put them in an array, then print the result.
+    $zd_ticket_orgs = array_column($tickets_from_zd_view->tickets, 'organization_id');
+    echo "<br>";
+    print_r("These are all the ORG IDs from our Zendesk View:  ");
+    print_r($zd_ticket_orgs);
+    echo "<br>";
+
+    //Find ORG ID matches between Google Calendar and the Zendesk view.
+    $matching_org_ids = array_intersect($zd_ticket_orgs, $gcal_orgs);
+    $tickets_from_zd_view = $client->views(360049656394)->tickets();
+
     if (empty($matching_org_ids) == false) {
         echo "<br>";
         print_r("Yes, there are ORG ID matches between what's in the Events Calendar and what's in the Zendesk View!  Here are the matching ORG IDs");
@@ -86,7 +74,7 @@ function addTag($zd_ticket_ids) {
         foreach($tickets_from_zd_view->tickets as $ticket) {
             $x = $ticket->id;
             $y = $ticket->organization_id;
-            if(in_array($y, $orgs_from_gcal)) {
+            if(in_array($y, $gcal_orgs)) {
 
                 print_r("Adding Comment and Tag");
                 $client->tickets()->update($x, [
@@ -105,6 +93,7 @@ function addTag($zd_ticket_ids) {
                     'tags' => ['checked'],
 
                 ]);
+
             }
         }
     }
@@ -112,30 +101,8 @@ function addTag($zd_ticket_ids) {
         echo "<br>";
         print_r("No, there are not any ORG ID matches right now between what's in the Events Calendar and what's in the Zendesk View, so this array is empty:");
         echo "<br>";
-        addTag($zd_ticket_ids);
     }
-print_r($matching_org_ids);
-echo "<br>";
-
-
-
-/*
-function addComment($array_of_customer_events)
-{
-    $client = zendesk_client_init();
-    try {
-      $updatedTickets = $client->tickets()->update(
-          [
-              'id'    => $array_of_customer_events,
-              'comment'  => [
-                             'body' => '(Hi Supporta! This customer may be having a High Traffic event right now. Please check the `Customers` calendar for more information',
-                             'public' => false,
-                         ],
-          ]
-      );
-    } catch (\Zendesk\API\Exceptions\ApiResponseException $e)
-    {
-        echo $e->getMessage().'</br>';
-    }
+    print_r($matching_org_ids);
+    return $matching_org_ids;
 }
-//addComment($array_of_ticket_ids);
+addComment();
