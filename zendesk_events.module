@@ -72,25 +72,30 @@ function addComment() {
         echo "<br>";
 
         foreach($tickets_from_zd_view->tickets as $ticket) {
+            $array = array();
             $x = $ticket->id;
             $y = $ticket->organization_id;
+            $z = array_push($array, $x);
+
             if(in_array($y, $gcal_orgs)) {
 
                 print_r("Adding Comment and Tag");
-                $client->tickets()->update($x, [
+                $client->tickets()->updateMany( [
+                        'ids'    => $array,
                         'comment'  => [
-                                        'body' => 'Hi Supporta! This customer may be having a High Traffic event right now. Please check the `Customers` calendar for more information',
+                                    'body' => 'Hi Supporta! This customer may be having a High Traffic event right now. Please check the `Customers` calendar for more information',
                                     'public' => false,
                                 ],
-                        'tags' => ['checked'],
+                        'additional_tags' => ['checked'],
                     ]);
 
             }
             else {
                 print_r("Just adding Tag.");
-                $client->tickets()->update($x, [
+                $client->tickets()->updateMany( [
 
-                    'tags' => ['checked'],
+                    'ids'    => $array,
+                    'additional_tags' => ['checked'],
 
                 ]);
 
@@ -106,3 +111,22 @@ function addComment() {
     return $matching_org_ids;
 }
 addComment();
+
+/*
+
+//An example of using updateMany
+function addTag($zd_ticket_ids) {
+    $client = zendesk_client_init();
+    //Try/Catch for testing
+    try {
+        $updatedTickets = $client->tickets()->updateMany(
+            [
+                'ids'    => $zd_ticket_ids,
+                'tags' => ['checked'],
+            ]
+        );
+    }
+    catch (\Zendesk\API\Exceptions\ApiResponseException $e) {
+        echo $e->getMessage().'</br>';
+    }
+}
