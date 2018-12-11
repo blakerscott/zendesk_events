@@ -112,6 +112,16 @@ function addComment() {
 }
 addComment();
 
+
+//This is where the master function should live in the `.module` file. When you call  `drush zd-command`  the PHP code will run in this function.
+function drush_zendesk_events_zd_command()
+{
+    // Put in here the master function you want drush to run.
+    addComment();
+ }
+
+ drush_zendesk_events_zd_command();
+
 /*
 
 //An example of using updateMany
