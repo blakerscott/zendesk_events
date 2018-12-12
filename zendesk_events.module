@@ -64,7 +64,6 @@ function addComment() {
 
     //Find ORG ID matches between Google Calendar and the Zendesk view.
     $matching_org_ids = array_intersect($zd_ticket_orgs, $gcal_orgs);
-    $tickets_from_zd_view = $client->views(360049656394)->tickets();
 
     if (empty($matching_org_ids) == false) {
         echo "<br>";
@@ -106,13 +105,19 @@ function addComment() {
         echo "<br>";
         print_r("No, there are not any ORG ID matches right now between what's in the Events Calendar and what's in the Zendesk View, so this array is empty:");
         echo "<br>";
+        $client->tickets()->updateMany( [
+
+            'ids' => $zd_ticket_ids,
+            'additional_tags' => ['checked'],
+
+        ]);
     }
     print_r($matching_org_ids);
     return $matching_org_ids;
 }
 addComment();
 
-
+/*
 //This is where the master function should live in the `.module` file. When you call  `drush zd-command`  the PHP code will run in this function.
 function drush_zendesk_events_zd_command()
 {
@@ -121,22 +126,3 @@ function drush_zendesk_events_zd_command()
  }
 
  drush_zendesk_events_zd_command();
-
-/*
-
-//An example of using updateMany
-function addTag($zd_ticket_ids) {
-    $client = zendesk_client_init();
-    //Try/Catch for testing
-    try {
-        $updatedTickets = $client->tickets()->updateMany(
-            [
-                'ids'    => $zd_ticket_ids,
-                'tags' => ['checked'],
-            ]
-        );
-    }
-    catch (\Zendesk\API\Exceptions\ApiResponseException $e) {
-        echo $e->getMessage().'</br>';
-    }
-}
