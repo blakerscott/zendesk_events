@@ -90,10 +90,11 @@ function addComment() {
 
             }
             else {
-                print_r("Just adding Tag.");
+                //print_r("Just adding Tag.");
+
                 $client->tickets()->updateMany( [
 
-                    'ids'    => $array,
+                    'ids'    => $zd_ticket_ids,
                     'additional_tags' => ['checked'],
 
                 ]);
@@ -105,13 +106,19 @@ function addComment() {
         echo "<br>";
         print_r("No, there are not any ORG ID matches right now between what's in the Events Calendar and what's in the Zendesk View, so this array is empty:");
         echo "<br>";
-        $client->tickets()->updateMany( [
+        try {
+            $client->tickets()->updateMany( [
 
             'ids' => $zd_ticket_ids,
             'additional_tags' => ['checked'],
 
-        ]);
-    }
+         ]);
+      }
+
+      catch (\Zendesk\API\Exceptions\ApiResponseException $e) {
+        echo $e->getMessage().'</br>';
+     }
+  }
     print_r($matching_org_ids);
     return $matching_org_ids;
 }
@@ -126,3 +133,25 @@ function drush_zendesk_events_zd_command()
  }
 
  drush_zendesk_events_zd_command();
+*/
+
+/*
+ function addComment($array_of_customer_events)
+{
+    $client = zendesk_client_init();
+    try {
+      $updatedTickets = $client->tickets()->update(
+          [
+              'id'    => $array_of_customer_events,
+              'comment'  => [
+                             'body' => '(Hi Supporta! This customer may be having a High Traffic event right now. Please check the `Customers` calendar for more information',
+                             'public' => false,
+                         ],
+          ]
+      );
+    }
+
+    catch (\Zendesk\API\Exceptions\ApiResponseException $e) {
+        echo $e->getMessage().'</br>';
+    }
+}
